@@ -10,8 +10,7 @@ image2 = Image.open(imgfile)
 # 获取getpixel的返回数
 
 def getPixellen():
-    return image.getpixel((1, 1))
-
+    return len(image.getpixel((1, 1)))
 # 判断黑线的像素点
 
 def dotIsDark(x,y,p=0,maginrgb=300):
