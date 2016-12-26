@@ -78,9 +78,9 @@ def main():
                 r0,g0,b0,z0=image.getpixel((j, max(start-offset-2,0)))
                 r1,g1,b1,z1=image.getpixel((j, min(start+2,image_width)))
             for i in range(0,offset+1):
-                r=(r1*(i+1)+r0*(offset-i-1))/offset
-                g=(g1*(i+1)+g0*(offset-i-1))/offset
-                b=(b1*(i+1)+b0*(offset-i-1))/offset
+                r=int((r1*(i+1)+r0*(offset-i-1))/offset)
+                g=int((g1*(i+1)+g0*(offset-i-1))/offset)
+                b=int((b1*(i+1)+b0*(offset-i-1))/offset)
                 image2.putpixel([min(j,image_width-1),max(start-offset+i,0)],(r,g,b))
     image2.show()
 
