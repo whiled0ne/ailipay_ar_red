@@ -30,11 +30,12 @@ class MyImage:
             self.image_height = 340
             image_x=150
             image_y=441
+        # mi 5 plus
         elif image.size==(720,1280) or image.size==(719,1280):
-            self.image_width = 282
-            self.image_height = 282
-            image_x=220
-            image_y=714
+            self.image_width = 256
+            self.image_height = 256
+            image_x=231
+            image_y=760
         # samsung s6 edge by gMan1990
         elif image.size==(1440,2560):
             self.image_width = 560
@@ -152,12 +153,13 @@ def main():
     stack=0
     max_tt=0
     magin_rat=10
+    max_line_with=9*340/myimage.image_height
     for i in range(1,len(ttlist)):
         distance= ttlist[i]-ttlist[i-1]
         calc_step=max(-100,steps[i/12]/10)
 
         print i,ttlist[i],line_with,stack,distance,ratlist[i],calc_step,max_tt,
-        if line_with<9 and \
+        if line_with<max_line_with and \
         (distance<calc_step or stack <-1 or ttlist[i]<max_tt and 1==1) \
         and ratlist[i]<=magin_rat \
         and (len(cutlist0)==0 or i-cutlist0[-1][0]>2 ): # gap of two line at least 3
