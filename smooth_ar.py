@@ -165,8 +165,8 @@ def main():
 
         print i,ttlist[i],line_with,stack,distance,ratlist[i],calc_step,max_tt,
         if line_with<max_line_with and \
-        (distance<calc_step or stack <-1 or ttlist[i]<max_tt and 1==1) \
-        and ratlist[i]<=magin_rat \
+        (distance<calc_step or stack <-1 or ttlist[i]<max_tt+0.2 and 1==1) \
+        and ratlist[i]<=magin_rat+0.2 \
         and (len(cutlist0)==0 or i-cutlist0[-1][0]>2 ): # gap of two line at least 3
             print "\t\t[+++++]"
             if magin_rat<ratlist[i] or magin_rat==10:
