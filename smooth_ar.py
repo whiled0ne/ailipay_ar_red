@@ -10,9 +10,8 @@ import random,sys,os
 
 class MyImage:
     def __init__(self,imgfile):
-
         image = Image.open(imgfile)
-        #print image.size
+
         if image.size==(480,854):
             self.image_width = 210
             self.image_height = 210
@@ -34,7 +33,7 @@ class MyImage:
         elif image.size==(720,1280) or image.size==(719,1280):
             self.image_width = 256
             self.image_height = 256
-            image_x=231
+            image_x=232
             image_y=760
         elif image.size==(899,1600):
             self.image_width = 404
@@ -59,10 +58,11 @@ class MyImage:
             image_x=330
             image_y=962
         else:
-            self.image_width = 200
-            self.image_height = 200
+            self.image_width = image.size[0]
+            self.image_height =image.size[1]
             image_x=0
             image_y=0
+
         image2=image.crop(
             (
             image_x,image_y,image_x+self.image_width,image_y+self.image_height)
@@ -70,7 +70,7 @@ class MyImage:
 
         self.image=image2
         bgcolor = (255,255,255)
-        self.newimage = Image.new('RGB',(self.image_width*3 ,self.image_height ),bgcolor)
+        self.newimage = Image.new('RGB',((self.image_width+30)*3 ,(self.image_height+30)*2 ),bgcolor)
 
     def getPixellen(self):
         return len(self.image.getpixel((1, 1)))
@@ -119,6 +119,7 @@ def main():
     if len(sys.argv)<2:
         print "\n  Run as the following command:"
         print "\t%s  path_of_image\n"%os.path.basename(sys.argv[0])
+        print u"截图时，请对着白色的墙壁或者白纸截图，提高成功率"
         return
     if len(sys.argv)==3:
         offset=sys.argv[2]
@@ -129,7 +130,7 @@ def main():
 
     image_width = myimage.image_width
     image_height = myimage.image_height
-    cutlist0=[]
+    cutlist=[[],[],[]]
 
     ttlist=[]
     ratlist=[]
@@ -152,78 +153,86 @@ def main():
     for i in range(0,image_height,12):
         seglist=ttlist[i+3:i+12+3]
         steps.append(min(seglist)-max(seglist))
-
-    lasthide=False
-    line_with=0
-    stack=0
-    max_tt=0
-    magin_rat=10
     max_line_with=9*myimage.image_height/340
-    for i in range(1,len(ttlist)):
-        distance= ttlist[i]-ttlist[i-1]
-        calc_step=max(-100,steps[i/12]/10)
+    for m in (0,1,2):
+        matt_delta=m*0.3
+        lasthide=False
+        line_with=0
+        stack=0
+        stack_nums_pos=0
+        stack_nums_neg=0
+        max_tt=0
+        magin_rat=10
 
-        print i,ttlist[i],line_with,stack,distance,ratlist[i],calc_step,max_tt,
-        if line_with<max_line_with and \
-        (distance<calc_step or stack <-1 or ttlist[i]<max_tt+0.2 and 1==1) \
-        and ratlist[i]<=magin_rat+0.2 \
-        and (len(cutlist0)==0 or i-cutlist0[-1][0]>2 ): # gap of two line at least 3
-            print "\t\t[+++++]"
-            if magin_rat<ratlist[i] or magin_rat==10:
-                magin_rat=ratlist[i]
-            if distance>0:
-                stack+=1
+
+        for i in range(1,len(ttlist)):
+            distance= ttlist[i]-ttlist[i-1]
+            calc_step=max(-100,steps[i/12]/10)
+            stack_num=(stack_nums_neg,stack_nums_pos)
+
+            if line_with<max_line_with and \
+            (distance<calc_step or (stack <-1) or ttlist[i]<max_tt) \
+            and (ratlist[i]<=magin_rat+matt_delta or line_with<max_line_with/2)\
+            and (len(cutlist[m])==0 or i-cutlist[m][-1][0]>2 ): # gap of two line at least 3
+                line_is= "\t\t[+++++]"
+                if magin_rat<ratlist[i] or magin_rat==10:
+                    magin_rat=ratlist[i]
+                if distance>0:
+                    stack_nums_pos+=distance
+                    stack+=1
+                else:
+                    stack_nums_neg+=distance
+                    if max_tt<ttlist[i]:
+                        max_tt=ttlist[i]
+                    stack-=1
+                if lasthide==False:
+                    stack_nums_pos=0
+                    stack_nums_neg=0
+                    line_with=1
+                else:
+                    line_with+=1
+                lasthide=True
+            elif lasthide==True:
+                line_is= "\t\t[----]"
+                magin_rat=10
+                lasthide=False
+                if line_with>2:
+                    cut=(i,line_with)
+                    cutlist[m].append(cut)
+                    line_with=0
+                    stack=0
+                    max_tt=0
             else:
-                if max_tt<ttlist[i]:
-                    max_tt=ttlist[i]
-                stack-=1
-            if lasthide==False:
-                line_with=1
-            else:
-                line_with+=1
-            lasthide=True
-        elif lasthide==True:
-            print "\t\t[----]"
-            magin_rat=10
-            lasthide=False
-            if line_with>2:
-                cut=(i,line_with)
-                cutlist0.append(cut)
-                line_with=0
                 stack=0
                 max_tt=0
-        else:
-            stack=0
-            max_tt=0
-            print ""
-    print cutlist0
+                line_is= ""
+            print i,ttlist[i],line_with,stack,distance,ratlist[i],calc_step,max_tt,stack_num,line_is
+    for i in cutlist:
+        print i
+    #return
 
-    cutlist=[cutlist0]#,cutlist1]
     img1=myimage.image.crop((0,0,image_width,image_height))
-    myimage.newimage.paste(img1,(0,0))
-    myimage.newimage.paste(img1,(image_width*2,0))
 
     last_y=0
-    for k in range(0,len(cutlist)):
-        for i in range(len(cutlist[k])):
-            #print k
-            start,line_with=cutlist[k][i]
-            line_with+=0
-            for j in range(0,image_width):
-                p0=myimage.getPixel(j, min(max(start-line_with-1,0),image_width))
-                p1=myimage.getPixel(j, min(start+1,image_width))
+    for w in range(0,2):
+        for k in range(0,len(cutlist)):
+            myimage.newimage.paste(img1,((image_width+30)*k,(image_height+30)*w))
+            for i in range(len(cutlist[k])):
+                start,line_with=cutlist[k][i]
+                for j in range(0,image_width):
+                    p0=myimage.getPixel(j, min(max(start-line_with-w-1,0),image_width))
+                    p1=myimage.getPixel(j, min(start+w+1,image_width))
 
-                r0,g0,b0=p0[0:3]
-                r1,g1,b1=p1[0:3]
+                    r0,g0,b0=p0[0:3]
+                    r1,g1,b1=p1[0:3]
 
-                for i in range(0,line_with+1):
-                    r=int((r1*(i+1)+r0*(line_with-i-1))/line_with)
-                    g=int((g1*(i+1)+g0*(line_with-i-1))/line_with)
-                    b=int((b1*(i+1)+b0*(line_with-i-1))/line_with)
-                    x=min(j,image_width-1)
-                    y=max(start-line_with+i,0)
-                    myimage.setPixel(x,y+k*image_height,r,g,b)
-                    myimage.setPixel(x+image_width,y+k*image_height,r,g,b)
+                    for i in range(0,line_with+1):
+                        r=int((r1*(i+1)+r0*(line_with-i-1))/line_with)
+                        g=int((g1*(i+1)+g0*(line_with-i-1))/line_with)
+                        b=int((b1*(i+1)+b0*(line_with-i-1))/line_with)
+                        x=min(j,image_width-1)
+                        y=max(start-line_with+i,0)
+                        myimage.setPixel(x+(image_width+30)*k,y+(image_height+30)*w,r,g,b)
     myimage.newimage.show()
 
 if __name__ == '__main__':
