@@ -36,6 +36,11 @@ class MyImage:
             self.image_height = 256
             image_x=231
             image_y=760
+        elif image.size==(899,1600):
+            self.image_width = 404
+            self.image_height = 404
+            image_x=247
+            image_y=766
         # samsung s6 edge by gMan1990
         elif image.size==(1440,2560):
             self.image_width = 560
@@ -153,7 +158,7 @@ def main():
     stack=0
     max_tt=0
     magin_rat=10
-    max_line_with=9*340/myimage.image_height
+    max_line_with=9*myimage.image_height/340
     for i in range(1,len(ttlist)):
         distance= ttlist[i]-ttlist[i-1]
         calc_step=max(-100,steps[i/12]/10)
