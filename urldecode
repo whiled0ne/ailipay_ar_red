@@ -1,0 +1,145 @@
+void url_decode(char * dStr,const char *str,int len,int mode) {
+	
+	//char *dStr = malloc(len + 1);
+	char eStr[] = "00"; /* for a hex code */
+	int i; /* the counter for the string */
+	int j=0;
+	int x=0;
+	if (mode==0)
+	{
+		strncpy(dStr, str,len+1);
+	}
+	else
+	{
+		strncat(dStr, str,len+1);
+	}
+	
+	for(i=0;i<strlen(dStr);++i) {
+		//printf("index: %d %c %s\n",i,dStr[i],dStr);
+		//num++;
+		if (dStr[i] >= 'A' && dStr[i]<='Z'){
+			/* upper to lower */
+			dStr[i]=dStr[i]+32;
+		}
+		else if(dStr[i] == '%') {
+			if(dStr[i+1] == 0)
+				return;
+
+			if(isxdigit(dStr[i+1]) && isxdigit(dStr[i+2])) {
+				/* like %2d */
+				/* combine the next to numbers into one */
+				eStr[0] = dStr[i+1];
+				eStr[1] = dStr[i+2];
+
+				/* convert it to decimal */
+				x = strtol(eStr, NULL, 16);
+				if( x >='A' && x<='Z' )
+					x+=32;
+				/* remove the hex */
+				if (x>=32 && x<=126)
+				{
+					memmove(&dStr[i+1], &dStr[i+3], strlen(&dStr[i+3])+1);
+					dStr[i] = x;
+					//printf("[%s]\n",dStr);
+					if (x==37)/* like %%25 */
+						i-=1;
+					else if (i>1 && dStr[i-1] == '%')/* like %%325 */
+						i-=2;
+					else if (i>2 && dStr[i-2]== '%')/* like %2%35 */
+						i-=3;
+				}
+				else
+				{
+					dStr[i] = '-';
+				}
+
+			}
+			else if(dStr[i+1]=='u' || dStr[i+1]=='U'){
+				/* like %u */
+				int j=0;
+				while (dStr[i+j+2]=='0' && dStr[i+j+3]=='0')
+					j+=2;
+				memmove(&dStr[i+1], &dStr[i+j+2], strlen(&dStr[i+j+2])+1);
+				i-=1;				
+			}
+			else if(dStr[i+1]=='%'|| isxdigit(dStr[i+1]) && dStr[i+2]=='%'|| dStr[i-1]=='<'|| dStr[i+1]=='>')
+			{}
+			else
+			{
+				memmove(&dStr[i], &dStr[i+1], strlen(&dStr[i+1])+1);
+			}
+		}
+		else if(dStr[i]=='\\' && (dStr[i+1]=='u' || dStr[i+1]=='U' || dStr[i+1]=='x' || dStr[i+1]=='X')){
+			/* like \u2d \x2d */
+			j=0;
+			while (dStr[i+j+2]=='0' && dStr[i+j+3]=='0')
+			j+=2;
+			dStr[i]='%';
+			memmove(&dStr[i+1], &dStr[i+j+2], strlen(&dStr[i+j+2])+1);
+			i-=1;
+		}
+		else if(dStr[i]=='&' && dStr[i+1]=='#'){			
+			if (dStr[i+2]=='x' || dStr[i+2]=='X'){
+				/* like &#x2d */
+				j=0;
+				while (dStr[i+j+3]=='0' && dStr[i+j+4]=='0')
+					j+=2;
+				dStr[i]='%';
+				memmove(&dStr[i+1], &dStr[i+j+3], strlen(&dStr[i+j+3])+1);
+				i-=1;		
+			}
+			else if(isdigit(dStr[i+2]) && isdigit(dStr[i+3])){	
+				/* like &#39 */
+				j=0;
+				while (dStr[i+j+2]=='0' && dStr[i+j+3]=='0')
+					j+=2;
+				dStr[i]='%';
+				
+				eStr[0] = dStr[i+j+2];
+				eStr[1] = dStr[i+j+3];
+				/* convert it to decimal */
+				x = strtol(eStr, NULL, 10);
+				snprintf(eStr, 3,"%x",x);
+				dStr[i+j+2] = eStr[0];
+				dStr[i+j+3] = eStr[1];
+				memmove(&dStr[i+1], &dStr[i+j+2], strlen(&dStr[i+j+2])+1);
+				i-=1;
+			}
+		}
+		else if(dStr[i] == '&' )
+		{
+			if(dStr[i+1] == 'a' && dStr[i+2] == 'm' &&dStr[i+3]== 'p' &&dStr[i+4] == ';')
+			{
+				memmove(&dStr[i+1], &dStr[i+5], strlen(&dStr[i+5])+1);
+				i-=1;
+			}
+			else if(dStr[i+1] == 'l' && dStr[i+2] == 't' &&dStr[i+3]== ';' )
+			{
+				dStr[i] = '<';
+				memmove(&dStr[i+1], &dStr[i+4], strlen(&dStr[i+4])+1);
+			}
+			else if(dStr[i+1] == 'g' && dStr[i+2] == 't' &&dStr[i+3]== ';' )
+			{
+				dStr[i] = '>';
+				memmove(&dStr[i+1], &dStr[i+4], strlen(&dStr[i+4])+1);
+			}
+			else if(dStr[i+1] == 'q' && dStr[i+2] == 'u' &&dStr[i+3]== 'o' &&dStr[i+4]== 't' &&dStr[i+5]== ';' )
+			{
+				dStr[i] = '"';
+				memmove(&dStr[i+1], &dStr[i+6], strlen(&dStr[i+6])+1);
+			}
+			else if(dStr[i+1] == 'a' && dStr[i+2] == 'p' &&dStr[i+3]== 'o' &&dStr[i+4]== 's' &&dStr[i+5]== ';' )
+			{
+				dStr[i] = '>';
+				memmove(&dStr[i+1], &dStr[i+6], strlen(&dStr[i+6])+1);
+			}
+		}
+		else if(dStr[i] == '+' )
+		{
+			dStr[i] = ' ';
+		}
+	}
+
+	//printf("%d times char check\n",num);
+	//return dStr;
+}
